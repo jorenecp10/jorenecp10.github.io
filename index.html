@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario de firma</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://drive.google.com/file/d/17m44BN8J2yoHfuUiUW-hJk8UNo1KsbIS/view/form.css">
+  <style type="text/css">
+    #canvas {
+        border: 0.5px solid #000;
+    }
+</style>
+</head>
+
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 offset-md-3">
+                    <h1 class="text-center">Formulario de firma</h1>
+                    <form id="formulario">
+                        <div class="form-group">
+                            <label for="nombre">Nombre:</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="apellido">Apellido:</label>
+                            <input type="text" class="form-control" id="apellido" name="apellido" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="correo">Correo electrónico:</label>
+                            <input type="email" class="form-control" id="correo" name="correo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="firma">Firma:</label>
+                            <canvas id="canvas" width="400" height="200"></canvas>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enviar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
+        <script type="text/javascript">
+            var canvas = document.getElementById('canvas');
+            var signaturePad = new SignaturePad(canvas);
+            signaturePad.penColor = 'black';
+            signaturePad.backgroundColor = 'white';
+            signaturePad.minWidth = 2;
+            signaturePad.maxWidth = 2;
+    
+            $('#formulario').submit(function(e) {
+                e.preventDefault();
+    
+                var signatureData = signaturePad.toDataURL();
+                $.ajax({
+                    url: 'https://script.google.com/macros/s/TU-ID-DE-SCRIPT/exec',
+                    method: 'GET',
+                    dataType: 'json',
+                    data: $('#formulario').serialize() + '&firma=' + 
+                    encodeURIComponent(signatureData),
+                    success: function(response) {
+                        alert('¡Formulario enviado correctamente!');
+                    },
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.error(textStatus, errorThrown);
+			}
+		});
+	});
+</script>
+</html>
