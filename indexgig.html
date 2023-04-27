@@ -9,7 +9,6 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-  
 
 </head>
 <body>
@@ -42,102 +41,110 @@
         </div>
       </div>
       
-<script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    let isDrawing = false;
-    let points = [];
 
-    function resizeCanvas() {
-        canvas.width = 800;
-canvas.height = 250;
-
+      <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+     
+        // Configurar el canvas
+        canvas.width = 500;
+        canvas.height = 200;
         ctx.lineWidth = 2;
         ctx.lineCap = "round";
         ctx.strokeStyle = "#000";
-    }
-
-    // Configurar el canvas
-    resizeCanvas();
-
-    function getCoordinates(e) {
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-        return { x, y };
-    }
-
-    function startDrawing(e) {
-        isDrawing = true;
-        points.push(getCoordinates(e));
-    }
-
-    function drawLine(e) {
-        if (!isDrawing) return;
-        e.preventDefault();
-        const newPoint = getCoordinates(e);
-        points.push(newPoint);
-
-        ctx.beginPath();
-        ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
-        ctx.lineTo(newPoint.x, newPoint.y);
-        ctx.stroke();
-    }
-
-    function stopDrawing() {
-        isDrawing = false;
-    }
-
-    // Eventos para dibujar en el canvas
-    canvas.addEventListener("mousedown", startDrawing);
-    canvas.addEventListener("touchstart", startDrawing);
-
-    canvas.addEventListener("mousemove", drawLine);
-    canvas.addEventListener("touchmove", drawLine);
-
-    canvas.addEventListener("mouseup", stopDrawing);
-    canvas.addEventListener("touchend", stopDrawing);
-
-    // Detectar cuando cambia la orientación del dispositivo
-    window.addEventListener("orientationchange", function() {
-        resizeCanvas();
-    });
-
-    // Evento para borrar la firma
-    $("#canvas-clear").on("click", function() {
-        points = [];
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    });
-
-    // Evento para enviar el formulario
-    $("form").submit(function(e) {
-        e.preventDefault();
-
-        // Obtener los valores de los campos del formulario
-        const nombre = $("#nombre").val();
-        const apellido = $("#apellido").val();
-        const email = $("#email").val();
-
-        // Convertir la firma en una imagen en formato base64
-        const signatureImage = canvas.toDataURL();
-
-        // Enviar la imagen a imgBB
-        $.ajax({
-            url: "https://api.imgbb.com/1/upload",
-            type: "POST",
-            data: {
-                key: "1f8d554d874fe24be3792dbabff76be8", // Reemplazar con tu API Key de imgBB
-                image: signatureImage.split(",")[1]
-            },
-            dataType: "json",
-            success: function(response) {
-                // Crear el objeto que se enviará a SheetDB con la URL de la imagen
-                const formData = {
+     
+        let isDrawing = false;
+        let points = [];
+     
+        // Eventos para dibujar en el canvas
+        canvas.addEventListener("mousedown", function(e) {
+           isDrawing = true;
+           points.push({
+              x: e.offsetX,
+              y: e.offsetY
+           });
+        });
+     
+        canvas.addEventListener("mousemove", function(e) {
+           if (!isDrawing) return;
+           points.push({
+              x: e.offsetX,
+              y: e.offsetY
+           });
+     
+           ctx.beginPath();
+           ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
+           ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+           ctx.stroke();
+        });
+     
+        canvas.addEventListener("mouseup", function(e) {
+           isDrawing = false;
+        });
+     
+        canvas.addEventListener("touchstart", function(e) {
+           e.preventDefault();
+           isDrawing = true;
+           points.push({
+              x: e.touches[0].clientX - canvas.offsetLeft,
+              y: e.touches[0].clientY - canvas.offsetTop
+           });
+        });
+     
+        canvas.addEventListener("touchmove", function(e) {
+           e.preventDefault();
+           if (!isDrawing) return;
+           points.push({
+              x: e.touches[0].clientX - canvas.offsetLeft,
+              y: e.touches[0].clientY - canvas.offsetTop
+           });
+     
+           ctx.beginPath();
+           ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
+           ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+           ctx.stroke();
+        });
+     
+        canvas.addEventListener("touchend", function(e) {
+           e.preventDefault();
+           isDrawing = false;
+        });
+     
+        // Evento para borrar la firma
+        $("#canvas-clear").on("click", function() {
+           points = [];
+           ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+     
+        // Evento para enviar el formulario
+        $("form").submit(function(e) {
+           e.preventDefault();
+     
+           // Obtener los valores de los campos del formulario
+           const nombre = $("#nombre").val();
+           const apellido = $("#apellido").val();
+           const email = $("#email").val();
+     
+           // Convertir la firma en una imagen en formato base64
+           const signatureImage = canvas.toDataURL();
+     
+           // Enviar la imagen a imgBB
+           $.ajax({
+              url: "https://api.imgbb.com/1/upload",
+              type: "POST",
+              data: {
+                 key: "1f8d554d874fe24be3792dbabff76be8", // Reemplazar con tu API Key de imgBB
+                 image: signatureImage.split(",")[1]
+              },
+              dataType: "json",
+              success: function(response) {
+                 // Crear el objeto que se enviará a SheetDB con la URL de la imagen
+                 const formData = {
                     nombre: nombre,
                     apellido: apellido,
                     email: email,
                     firma: response.data.url
-                };
+                 };
   
           // Enviar los datos a SheetDB
           $.ajax({
